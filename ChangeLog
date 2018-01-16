@@ -3,6 +3,7 @@
 	>>> from icdiff import diff
 	>>> diff(pre, post)
 	python 3.x bug fixes
+	Handle files with CR characters better and add --strip-trailing-cr
 
 1.9.0
 	Fix setup.py by symlinking icdiff to icdiff.py

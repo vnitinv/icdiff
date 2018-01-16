@@ -54,7 +54,7 @@ function check_gold() {
   fi
 
   if $REGOLD; then
-    if diff $tmp $gold > /dev/null; then
+    if [ -e $gold ] && diff $tmp $gold > /dev/null; then
       echo "Did not need to regold $gold"
     else
       cat $tmp
@@ -92,6 +92,7 @@ check_gold gold-45-sas-h.txt        tests/input-{4,5}.txt --cols=80 --show-all-s
 check_gold gold-45-sas-h-nb.txt     tests/input-{4,5}.txt --cols=80 --show-all-spaces --highlight --no-bold
 check_gold gold-45-h-nb.txt         tests/input-{4,5}.txt --cols=80 --highlight --no-bold
 check_gold gold-45-ln.txt           tests/input-{4,5}.txt --cols=80 --line-numbers
+check_gold gold-45-ln-color.txt     tests/input-{4,5}.txt --cols=80 --line-numbers --color-map='line-numbers:cyan'
 check_gold gold-45-nh.txt           tests/input-{4,5}.txt --cols=80 --no-headers
 check_gold gold-45-h3.txt           tests/input-{4,5}.txt --cols=80 --head=3
 check_gold gold-45-l.txt            tests/input-{4,5}.txt --cols=80 -L left
@@ -106,6 +107,14 @@ check_gold gold-67-u3.txt           tests/input-{6,7}.txt --cols=80 -U 3
 check_gold gold-tabs-default.txt    tests/input-{8,9}.txt --cols=80
 check_gold gold-tabs-4.txt          tests/input-{8,9}.txt --cols=80 --tabsize=4
 check_gold gold-file-not-found.txt  tests/input-4.txt nonexistent_file
+check_gold gold-strip-cr-off.txt    tests/input-4.txt tests/input-4-cr.txt --cols=80
+check_gold gold-strip-cr-on.txt     tests/input-4.txt tests/input-4-cr.txt --cols=80 --strip-trailing-cr
+check_gold gold-no-cr-indent        tests/input-4-cr.txt tests/input-4-partial-cr.txt --cols=80
+check_gold gold-hide-cr-if-dos      tests/input-4-cr.txt tests/input-5-cr.txt --cols=80
+check_gold gold-12-subcolors.txt    tests/input-{1,2}.txt --cols=80 --color-map='change:magenta,description:cyan_bold'
+check_gold gold-subcolors-bad-color tests/input-{1,2}.txt --cols=80 --color-map='change:mageta,description:cyan_bold'
+check_gold gold-subcolors-bad-cat tests/input-{1,2}.txt --cols=80 --color-map='chnge:magenta,description:cyan_bold'
+check_gold gold-subcolors-bad-fmt tests/input-{1,2}.txt --cols=80 --color-map='change:magenta:gold,description:cyan_bold'
 
 
 if [ ! -z "$INSTALLED" ]; then
@@ -115,6 +124,20 @@ else
 fi
 if [ "$VERSION" != $(head -n 1 ChangeLog) ]; then
   echo "Version mismatch between ChangeLog and icdiff source."
+  fail
+fi
+
+if ! command -v 'flake8' >/dev/null 2>&1; then
+  echo 'Could not find flake8. Ensure flake8 is installed and on your $PATH.'
+  if [ -z "$VIRTUAL_ENV" ]; then
+    echo 'It appears you have have forgotten to activate your virtualenv.'
+  fi
+  echo 'See README.md for details on setting up your environment.'
+  fail
+fi
+
+echo 'Running flake8 linter...'
+if ! flake8 icdiff; then
   fail
 fi
 
